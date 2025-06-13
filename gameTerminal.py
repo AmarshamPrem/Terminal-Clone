@@ -56,6 +56,55 @@ def processCmd(cmd, ud, data=None):
     if cmd == "exit":
         exit()
 
+    elif cmd.startswith("execute"):
+        l = cmd.split(" ")
+        l = list(filter(emptyList, l))
+        if len(l) != 2:
+            print("Invalid command. Usage: execute <filepath>")
+            return
+            
+        filepath = l[1]
+        if not os.path.exists(filepath):
+            print(f"Error: File '{filepath}' does not exist")
+            return
+            
+        file_ext = os.path.splitext(filepath)[1].lower()
+        
+        # Dictionary mapping file extensions to their execution commands
+        execute_commands = {
+            '.py': 'python',
+            '.js': 'node',
+            '.java': 'java',
+            '.cpp': 'g++ -o temp.exe {} && .\\temp.exe',
+            '.c': 'gcc -o temp.exe {} && .\\temp.exe',
+            '.rb': 'ruby',
+            '.php': 'php',
+            '.pl': 'perl',
+            '.sh': 'bash',
+            '.ps1': 'powershell -File'
+        }
+        
+        if file_ext not in execute_commands:
+            print(f"Error: Cannot execute files with extension {file_ext}")
+            print(f"Supported extensions: {', '.join(execute_commands.keys())}")
+            return
+            
+        try:
+            command = execute_commands[file_ext]
+            if '{}' in command:
+                command = command.format(filepath)
+            else:
+                command = f"{command} {filepath}"
+                
+            print(f"Executing file: {filepath}")
+            print("-" * 40)
+            os.system(command)
+            print("-" * 40)
+            
+        except Exception as e:
+            print(f"Error executing file: {str(e)}")
+            return
+
     elif cmd.startswith("write"):
         l = cmd.split(" ")
         l = list(filter(emptyList, l))
@@ -283,9 +332,6 @@ def processCmd(cmd, ud, data=None):
     elif cmd.strip() == "list":
         for c in commands:
             print(c)
-
-
-
 
     else:
         print("Invalid command")
